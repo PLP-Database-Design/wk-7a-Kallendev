@@ -1,73 +1,49 @@
 -- 🔹 Question 1: Achieving 1NF (First Normal Form)
--- Original table has multi-valued Products column
--- Goal: Transform into individual rows (1NF)
--- ---------------------------------------------
+-- Create 1NF-compliant table directly
+CREATE TABLE ProductDetail ( 
+    OrderID INT, 
+    CustomerName VARCHAR(100), 
+    Products VARCHAR(100) 
+); 
 
--- Step 1: Original Table (violates 1NF)
-CREATE TABLE ProductDetail (
-    OrderID INT,
-    CustomerName VARCHAR(100),
-    Products VARCHAR(255)
-);
-
-INSERT INTO ProductDetail (OrderID, CustomerName, Products) VALUES
-(101, 'John Doe', 'Laptop, Mouse'),
-(102, 'Jane Smith', 'Tablet, Keyboard, Mouse'),
-(103, 'Emily Clark', 'Phone');
-
--- Step 2: 1NF-compliant Table (each row = one product)
-CREATE TABLE ProductDetail_1NF (
-    OrderID INT,
-    CustomerName VARCHAR(100),
-    Product VARCHAR(100)
-);
-
-INSERT INTO ProductDetail_1NF (OrderID, CustomerName, Product) VALUES
-(101, 'John Doe', 'Laptop'),
-(101, 'John Doe', 'Mouse'),
-(102, 'Jane Smith', 'Tablet'),
-(102, 'Jane Smith', 'Keyboard'),
-(102, 'Jane Smith', 'Mouse'),
-(103, 'Emily Clark', 'Phone');
-
--- View result
-SELECT * FROM ProductDetail_1NF;
+-- Insert one product per row
+INSERT INTO ProductDetail(OrderID, CustomerName, Products) 
+VALUES 
+(101, 'John Doe', 'Laptop'), 
+(101, 'John Doe', 'Mouse'), 
+(102, 'Jane Smith', 'Tablet'), 
+(102, 'Jane Smith', 'Keyboard'), 
+(102, 'Jane Smith', 'Mouse'), 
+(103, 'Emily Clark', 'Phone'); 
 
 -- ---------------------------------------------
 -- 🔹 Question 2: Achieving 2NF (Second Normal Form)
--- Original table has partial dependency: CustomerName → OrderID
--- Goal: Split into separate tables for Orders and OrderItems
--- ---------------------------------------------
+-- Orders table
+CREATE TABLE orders( 
+    OrderID INT PRIMARY KEY, 
+    CustomerName VARCHAR(100) 
+); 
 
--- Step 1: Orders Table (1NF ➡️ 2NF)
-CREATE TABLE Orders (
-    OrderID INT PRIMARY KEY,
-    CustomerName VARCHAR(100)
-);
+INSERT INTO orders (OrderID, CustomerName) 
+VALUES 
+(101, 'John Doe'), 
+(102, 'Jane Smith'), 
+(103, 'Emily Clark'); 
 
-INSERT INTO Orders (OrderID, CustomerName) VALUES
-(101, 'John Doe'),
-(102, 'Jane Smith'),
-(103, 'Emily Clark');
+-- Product table (Fully depends on order_id)
+CREATE TABLE product( 
+    product_id INT PRIMARY KEY, 
+    productName VARCHAR(100), 
+    quantity INT, 
+    order_id INT, 
+    FOREIGN KEY (order_id) REFERENCES orders(OrderID) 
+); 
 
--- Step 2: OrderItems Table (depends fully on OrderID + Product)
-CREATE TABLE OrderItems (
-    OrderID INT,
-    Product VARCHAR(100),
-    Quantity INT,
-    PRIMARY KEY (OrderID, Product),
-    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
-);
-
-INSERT INTO OrderItems (OrderID, Product, Quantity) VALUES
-(101, 'Laptop', 2),
-(101, 'Mouse', 1),
-(102, 'Tablet', 3),
-(102, 'Keyboard', 1),
-(102, 'Mouse', 2),
-(103, 'Phone', 1);
-
--- View result
-SELECT o.OrderID, o.CustomerName, i.Product, i.Quantity
-FROM Orders o
-JOIN OrderItems i ON o.OrderID = i.OrderID;
+INSERT INTO product(product_id, productName, quantity, order_id) 
+VALUES  
+(1, 'Laptop', 2, 101), 
+(2, 'Mouse', 1, 101), 
+(3, 'Tablet', 3, 102), 
+(4, 'Keyboard', 2, 102), 
+(5, 'Mouse', 1, 102), 
+(6, 'Phone', 1, 103); 
